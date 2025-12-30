@@ -1,6 +1,6 @@
 //TODO: add google tests
 #include <cassert>
-#include "../easyConfig.h"
+#include "easyConfig.h"
 
 void tests()
 {
