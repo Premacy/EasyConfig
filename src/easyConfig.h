@@ -2,9 +2,8 @@
 #include <unordered_map>
 #include <optional>
 #include <string>
-#include <fstream>
 #include <sstream>
-
+#include <fstream>
 #include <algorithm>
 
 namespace utils
@@ -16,19 +15,23 @@ namespace utils
         });
         str.erase(itr, str.end());
     }
-}
+
+} // namespace utils
+
+namespace traits
+{
 //TODO сделать запрет на компиляцию при отсутсвии реализации
 template <typename T>
 struct packTrait
 {
-    std::string pack(const T&)
+    std::string pack(const T& t)
     {
-        return "";
+        return t;
     }
 
-    std::optional<T> unpack(const std::string&)
+    std::optional<T> unpack(const std::string& data)
     {
-        return std::nullopt;
+        return data;
     }
 };
 
@@ -42,23 +45,36 @@ struct packTrait<int>
 
     std::optional<int> unpack(const std::string& data)
     {
-        return std::atoi(data.c_str());
+        //FIXME: atoi returns 0 when false
+        int res = std::atoi(data.c_str());
+        if (!res) {
+            return std::nullopt;
+        }
+        return res;
     }
 };
 
 template <>
-struct packTrait<std::string>
+struct packTrait<double>
 {
-    std::string pack(const std::string& str)
+    double pack(const std::string& str)
     {
-        return str;
+        //FIXME: not implemented
+        return 0.0;
     }
 
-    std::optional<std::string> unpack(const std::string& data)
+    std::optional<double> unpack(const std::string& data)
     {
-        return data;
+        //FIXME: same as atoi
+        double res = std::atof(data.c_str());
+        if (!res) {
+            return std::nullopt;
+        }
+        return res;
     }
 };
+
+} // namespace traits
 
 class ConfigReader
 {
@@ -73,7 +89,7 @@ public:
         if (!configMap.contains(configName)) {
             return std::nullopt;
         }
-        return packTrait<T>().unpack(configMap[configName]);
+        return traits::packTrait<T>().unpack(configMap[configName]);
     }
 
 private:

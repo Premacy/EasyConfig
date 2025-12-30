@@ -1,2 +1,3 @@
 someField: 2
 someField2: Hello
+doubleField: 2.5
