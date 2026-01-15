@@ -8,19 +8,20 @@
 
 namespace utils
 {
-    void trim(std::string& str)
-    {
-        auto itr = std::remove_if(str.begin(), str.end(), [](char c) {
-            return c == ' ' || c == '\n' || c == '\t' || c == 13;
-        });
-        str.erase(itr, str.end());
-    }
+    
+void trim(std::string& str)
+{
+    auto itr = std::remove_if(str.begin(), str.end(), [](char c) {
+        return c == ' ' || c == '\n' || c == '\t' || c == 13;
+    });
+    str.erase(itr, str.end());
+}
 
 } // namespace utils
 
 namespace traits
 {
-//TODO сделать запрет на компиляцию при отсутсвии реализации
+
 template <typename T>
 struct packTrait
 {
@@ -38,16 +39,17 @@ struct packTrait
 template <>
 struct packTrait<int>
 {
-    std::string pack(const int& i)
+    std::string pack(int i)
     {
         return std::to_string(i);
     }
 
     std::optional<int> unpack(const std::string& data)
     {
-        //FIXME: atoi returns 0 when false
-        int res = std::atoi(data.c_str());
-        if (!res) {
+        int res;
+        try {
+            res = std::stoi(data.c_str());
+        } catch(...) {
             return std::nullopt;
         }
         return res;
@@ -57,17 +59,17 @@ struct packTrait<int>
 template <>
 struct packTrait<double>
 {
-    double pack(const std::string& str)
+    std::string pack(double val)
     {
-        //FIXME: not implemented
-        return 0.0;
+        return std::to_string(val);
     }
 
     std::optional<double> unpack(const std::string& data)
     {
-        //FIXME: same as atoi
-        double res = std::atof(data.c_str());
-        if (!res) {
+        double res;
+        try {
+            res = std::stof(data.c_str());
+        } catch(...) {
             return std::nullopt;
         }
         return res;
@@ -84,6 +86,7 @@ public:
         parse();
     }
     
+    // навесить constraint?
     template<typename T> std::optional<T> get(const std::string& configName)
     {
         if (!configMap.contains(configName)) {
@@ -105,7 +108,7 @@ private:
         std::string line;
         while (std::getline(file, line)) {
             if (auto data = parseLine(line, ':')) {
-                auto [key_, value_] = *data;
+                auto [key_, value_] = std::move(*data);
                 if (configMap.contains(key_)) {
                     throw std::logic_error("Duplicate key");
                 }
@@ -118,7 +121,6 @@ private:
     
     std::optional<std::pair<key, value>> parseLine(const std::string& line, char sep)
     {
-        //REFACTOR ME
         key key_;
         value value_;
         std::stringstream str(line);

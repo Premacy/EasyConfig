@@ -16,6 +16,7 @@ void tests()
     auto double_value = config.get<double>("doubleField");
     assert(double_value && double_value == 2.5);
 }
+
 int main()
 {
     std::cout << "Tests stared..." << std::endl;
