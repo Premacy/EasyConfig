@@ -8,7 +8,7 @@
 
 namespace utils
 {
-    
+
 void trim(std::string& str)
 {
     auto itr = std::remove_if(str.begin(), str.end(), [](char c) {
@@ -86,7 +86,6 @@ public:
         parse();
     }
     
-    // навесить constraint?
     template<typename T> std::optional<T> get(const std::string& configName)
     {
         if (!configMap.contains(configName)) {

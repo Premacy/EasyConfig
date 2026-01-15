@@ -1,6 +1,6 @@
 # EasyConfig
 
-Header-only C++ library for easy work with configs
+Header-only C++ library for easy working with configs
 
 ## Tests
 

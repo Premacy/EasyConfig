@@ -1,2 +1,2 @@
-test:
+tests:
 	./tests/build.sh && ./tests/run.sh
