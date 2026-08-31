@@ -8,20 +8,19 @@
 
 namespace utils
 {
-
-void trim(std::string& str)
-{
-    auto itr = std::remove_if(str.begin(), str.end(), [](char c) {
-        return c == ' ' || c == '\n' || c == '\t' || c == 13;
-    });
-    str.erase(itr, str.end());
-}
+    void trim(std::string& str)
+    {
+        auto itr = std::remove_if(str.begin(), str.end(), [](char c) {
+            return c == ' ' || c == '\n' || c == '\t' || c == 13;
+        });
+        str.erase(itr, str.end());
+    }
 
 } // namespace utils
 
 namespace traits
 {
-
+// TODO: Fail compilation when no specialization is available.
 template <typename T>
 struct packTrait
 {
@@ -39,17 +38,16 @@ struct packTrait
 template <>
 struct packTrait<int>
 {
-    std::string pack(int i)
+    std::string pack(const int& i)
     {
         return std::to_string(i);
     }
 
     std::optional<int> unpack(const std::string& data)
     {
-        int res;
-        try {
-            res = std::stoi(data.c_str());
-        } catch(...) {
+        //FIXME: atoi returns 0 when false
+        int res = std::atoi(data.c_str());
+        if (!res) {
             return std::nullopt;
         }
         return res;
@@ -59,17 +57,17 @@ struct packTrait<int>
 template <>
 struct packTrait<double>
 {
-    std::string pack(double val)
+    double pack(const std::string& str)
     {
-        return std::to_string(val);
+        //FIXME: not implemented
+        return 0.0;
     }
 
     std::optional<double> unpack(const std::string& data)
     {
-        double res;
-        try {
-            res = std::stof(data.c_str());
-        } catch(...) {
+        //FIXME: same as atoi
+        double res = std::atof(data.c_str());
+        if (!res) {
             return std::nullopt;
         }
         return res;
@@ -107,7 +105,7 @@ private:
         std::string line;
         while (std::getline(file, line)) {
             if (auto data = parseLine(line, ':')) {
-                auto [key_, value_] = std::move(*data);
+                auto [key_, value_] = *data;
                 if (configMap.contains(key_)) {
                     throw std::logic_error("Duplicate key");
                 }
@@ -120,6 +118,7 @@ private:
     
     std::optional<std::pair<key, value>> parseLine(const std::string& line, char sep)
     {
+        //REFACTOR ME
         key key_;
         value value_;
         std::stringstream str(line);

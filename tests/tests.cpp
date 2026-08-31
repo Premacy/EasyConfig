@@ -1,26 +1,76 @@
-//TODO: add google tests
-#include <cassert>
-#include <iostream>
+#include <gtest/gtest.h>
+
+#include <filesystem>
+#include <fstream>
+#include <stdexcept>
+#include <string>
+
 #include "easyConfig.h"
 
-void tests()
+namespace
 {
-    ConfigReader config("config.txt");
-    
-    auto int_value = config.get<int>("someField");
-    assert(int_value && int_value == 2);
+class TemporaryConfig
+{
+public:
+    explicit TemporaryConfig(const std::string& contents)
+        : path_(std::filesystem::temp_directory_path() / "easy_config_test.txt")
+    {
+        std::ofstream file(path_);
+        file << contents;
+    }
 
-    auto str_value = config.get<std::string>("someField2");
-    assert(str_value && str_value == "Hello");
+    ~TemporaryConfig()
+    {
+        std::error_code error;
+        std::filesystem::remove(path_, error);
+    }
 
-    auto double_value = config.get<double>("doubleField");
-    assert(double_value && double_value == 2.5);
+    std::string path() const
+    {
+        return path_.string();
+    }
+
+private:
+    std::filesystem::path path_;
+};
+} // namespace
+
+TEST(ConfigReaderTest, ReadsSupportedTypes)
+{
+    ConfigReader config(TEST_CONFIG_PATH);
+
+    EXPECT_EQ(config.get<int>("someField"), 2);
+    EXPECT_EQ(config.get<std::string>("someField2"), "Hello");
+    EXPECT_EQ(config.get<double>("doubleField"), 2.5);
 }
 
-int main()
+TEST(ConfigReaderTest, ReturnsEmptyOptionalForMissingKey)
 {
-    std::cout << "Tests stared..." << std::endl;
-    tests();
-    std::cout << "Tests finished!" << std::endl;
-    return 0;
+    ConfigReader config(TEST_CONFIG_PATH);
+
+    EXPECT_EQ(config.get<std::string>("missing"), std::nullopt);
+}
+
+TEST(ConfigReaderTest, ThrowsForMissingFile)
+{
+    const auto missing =
+        std::filesystem::temp_directory_path() / "easy_config_missing_file.txt";
+    std::error_code error;
+    std::filesystem::remove(missing, error);
+
+    EXPECT_THROW(ConfigReader config(missing.string()), std::logic_error);
+}
+
+TEST(ConfigReaderTest, ThrowsForDuplicateKey)
+{
+    TemporaryConfig configFile("key: first\nkey: second\n");
+
+    EXPECT_THROW(ConfigReader config(configFile.path()), std::logic_error);
+}
+
+TEST(ConfigReaderTest, ThrowsForMalformedLine)
+{
+    TemporaryConfig configFile("missing_separator\n");
+
+    EXPECT_THROW(ConfigReader config(configFile.path()), std::logic_error);
 }
